@@ -38,6 +38,7 @@ public class Hessian2Serialization implements Serialization {
 
     @Override
     public byte getContentTypeId() {
+        // 存放在header中的序列化类型
         return HESSIAN2_SERIALIZATION_ID;
     }
 

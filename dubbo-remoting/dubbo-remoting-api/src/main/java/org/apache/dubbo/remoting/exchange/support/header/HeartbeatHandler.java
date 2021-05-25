@@ -62,6 +62,7 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
     }
 
     @Override
+    // 接收心跳
     public void received(Channel channel, Object message) throws RemotingException {
         setReadTimestamp(channel);
         if (isHeartbeatRequest(message)) {

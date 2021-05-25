@@ -110,6 +110,8 @@ public class NettyServerHandler extends ChannelDuplexHandler {
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         // server will close channel when server don't receive any heartbeat from client util timeout.
         if (evt instanceof IdleStateEvent) {
+            // Server端在指定的超时时间内没有发生读写，会直接关闭连接
+            // 相比之前现在只有Client发送心跳，单向发送心跳
             NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
             try {
                 logger.info("IdleStateEvent triggered, close channel " + channel);

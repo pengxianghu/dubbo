@@ -41,6 +41,7 @@ public interface Exchanger {
      */
     @Adaptive({Constants.EXCHANGER_KEY})
     ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException;
+    // HeaderExchangeServer
 
     /**
      * connect.
@@ -51,5 +52,6 @@ public interface Exchanger {
      */
     @Adaptive({Constants.EXCHANGER_KEY})
     ExchangeClient connect(URL url, ExchangeHandler handler) throws RemotingException;
+    // HeaderExchangeClient
 
 }

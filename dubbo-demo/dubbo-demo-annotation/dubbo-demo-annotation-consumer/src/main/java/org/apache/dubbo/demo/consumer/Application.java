@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.demo.consumer;
 
+import org.apache.dubbo.config.ApplicationConfig;
 import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.apache.dubbo.demo.DemoService;
 import org.apache.dubbo.demo.consumer.comp.DemoServiceComponent;
@@ -41,6 +42,7 @@ public class Application {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        ApplicationConfig applicationConfig = new ApplicationConfig();
     }
 
     @Configuration

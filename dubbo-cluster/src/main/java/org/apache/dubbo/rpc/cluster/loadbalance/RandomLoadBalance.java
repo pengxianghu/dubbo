@@ -45,6 +45,8 @@ public class RandomLoadBalance extends AbstractLoadBalance {
      */
     @Override
     protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
+        // 首先计算总权重，同时检查是否每一个服务都有相同的权重；如果总权重大于0并且服务的权重都不相同，则通过权重来随机选择
+        // 否则直接通过Random函数来随机, 返回一个invoker
         // Number of invokers
         int length = invokers.size();
         // Every invoker has the same weight?

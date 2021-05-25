@@ -25,6 +25,7 @@ public class Protocol$Adaptive implements org.apache.dubbo.rpc.Protocol {
         String extName = ( url.getProtocol() == null ? "dubbo" : url.getProtocol() );
         if(extName == null) throw new IllegalStateException("Failed to get extension (org.apache.dubbo.rpc.Protocol) name from url (" + url.toString() + ") use keys([protocol])");
         org.apache.dubbo.rpc.Protocol extension = (org.apache.dubbo.rpc.Protocol)ExtensionLoader.getExtensionLoader(org.apache.dubbo.rpc.Protocol.class).getExtension(extName);
+        // DubboProtocol
         return extension.export(arg0);
     }
 }

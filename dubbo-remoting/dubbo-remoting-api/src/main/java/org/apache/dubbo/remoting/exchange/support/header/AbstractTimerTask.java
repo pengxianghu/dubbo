@@ -74,11 +74,13 @@ public abstract class AbstractTimerTask implements TimerTask {
             return;
         }
 
+        // 重新注册事件
         timer.newTimeout(timeout.task(), tick, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public void run(Timeout timeout) throws Exception {
+        // 定时执行该方法
         Collection<Channel> c = channelProvider.getChannels();
         for (Channel channel : c) {
             if (channel.isClosed()) {

@@ -62,7 +62,9 @@ public class NettyServer extends AbstractServer implements RemotingServer {
     private org.jboss.netty.channel.Channel channel;
 
     public NettyServer(URL url, ChannelHandler handler) throws RemotingException {
-        super(ExecutorUtil.setThreadName(url, SERVER_THREAD_POOL_NAME), ChannelHandlers.wrap(handler, url));
+        super(ExecutorUtil.setThreadName(url, SERVER_THREAD_POOL_NAME),
+                // ***wrap***
+                ChannelHandlers.wrap(handler, url));
     }
 
     @Override
@@ -70,9 +72,12 @@ public class NettyServer extends AbstractServer implements RemotingServer {
         NettyHelper.setNettyLoggerFactory();
         ExecutorService boss = Executors.newCachedThreadPool(new NamedThreadFactory("NettyServerBoss", true));
         ExecutorService worker = Executors.newCachedThreadPool(new NamedThreadFactory("NettyServerWorker", true));
-        ChannelFactory channelFactory = new NioServerSocketChannelFactory(boss, worker, getUrl().getPositiveParameter(IO_THREADS_KEY, Constants.DEFAULT_IO_THREADS));
+        // netty线程池上限为32
+        ChannelFactory channelFactory = new
+                NioServerSocketChannelFactory(boss, worker, getUrl().getPositiveParameter(IO_THREADS_KEY, Constants.DEFAULT_IO_THREADS));
         bootstrap = new ServerBootstrap(channelFactory);
 
+        // 将NettyServer封装进NettyHandler中，实现了netty和dubbo的连接
         final NettyHandler nettyHandler = new NettyHandler(getUrl(), this);
         channels = nettyHandler.getChannels();
         // https://issues.jboss.org/browse/NETTY-365
@@ -89,8 +94,11 @@ public class NettyServer extends AbstractServer implements RemotingServer {
                 if (idleTimeout > 10000) {
                     pipeline.addLast("timer", new IdleStateHandler(timer, idleTimeout / 1000, 0, 0));
                 }*/
+                // 进入codec和serialization
                 pipeline.addLast("decoder", adapter.getDecoder());
                 pipeline.addLast("encoder", adapter.getEncoder());
+                // server端在数据经过解码之后就交给NettyHandler来处理
+                // NettyHandler继承于Netty的SimpleChannelHandler类
                 pipeline.addLast("handler", nettyHandler);
                 return pipeline;
             }

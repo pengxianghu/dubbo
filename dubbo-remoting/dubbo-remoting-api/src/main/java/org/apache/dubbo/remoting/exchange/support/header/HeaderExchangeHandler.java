@@ -71,6 +71,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
     void handlerEvent(Channel channel, Request req) throws RemotingException {
         if (req.getData() != null && req.getData().equals(READONLY_EVENT)) {
+            // 设置channel状态为read-only
             channel.setAttribute(Constants.CHANNEL_ATTRIBUTE_READONLY_KEY, Boolean.TRUE);
         }
     }
@@ -97,6 +98,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         // find handler by message class.
         Object msg = req.getData();
         try {
+            // handler定义在DubboProtocol中
             CompletionStage<Object> future = handler.reply(channel, msg);
             future.whenComplete((appResult, t) -> {
                 try {
@@ -163,6 +165,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
     }
 
     @Override
+    // 处理接收到的信息
     public void received(Channel channel, Object message) throws RemotingException {
         final ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
         if (message instanceof Request) {

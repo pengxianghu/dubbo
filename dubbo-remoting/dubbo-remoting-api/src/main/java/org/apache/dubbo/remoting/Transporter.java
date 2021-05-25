@@ -42,6 +42,7 @@ public interface Transporter {
      */
     @Adaptive({Constants.SERVER_KEY, Constants.TRANSPORTER_KEY})
     RemotingServer bind(URL url, ChannelHandler handler) throws RemotingException;
+    // NettyServer
 
     /**
      * Connect to a server.
@@ -54,5 +55,6 @@ public interface Transporter {
      */
     @Adaptive({Constants.CLIENT_KEY, Constants.TRANSPORTER_KEY})
     Client connect(URL url, ChannelHandler handler) throws RemotingException;
+    // NettyClient
 
 }

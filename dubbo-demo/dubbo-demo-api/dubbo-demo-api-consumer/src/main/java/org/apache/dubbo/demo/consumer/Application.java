@@ -17,12 +17,13 @@
 package org.apache.dubbo.demo.consumer;
 
 import org.apache.dubbo.config.ApplicationConfig;
+import org.apache.dubbo.config.ProtocolConfig;
 import org.apache.dubbo.config.ReferenceConfig;
 import org.apache.dubbo.config.RegistryConfig;
 import org.apache.dubbo.config.bootstrap.DubboBootstrap;
 import org.apache.dubbo.config.utils.ReferenceConfigCache;
 import org.apache.dubbo.demo.DemoService;
-import org.apache.dubbo.rpc.service.GenericService;
+import org.apache.dubbo.rpc.RpcContext;
 
 public class Application {
     public static void main(String[] args) {
@@ -34,7 +35,8 @@ public class Application {
     }
 
     private static boolean isClassic(String[] args) {
-        return args.length > 0 && "classic".equalsIgnoreCase(args[0]);
+        return true;
+//        return args.length > 0 && "classic".equalsIgnoreCase(args[0]);
     }
 
     private static void runWithBootstrap() {
@@ -53,10 +55,10 @@ public class Application {
         System.out.println(message);
 
         // generic invoke
-        GenericService genericService = (GenericService) demoService;
-        Object genericInvokeResult = genericService.$invoke("sayHello", new String[] { String.class.getName() },
-                new Object[] { "dubbo generic invoke" });
-        System.out.println(genericInvokeResult);
+//        GenericService genericService = (GenericService) demoService;
+//        Object genericInvokeResult = genericService.$invoke("sayHello", new String[] { String.class.getName() },
+//                new Object[] { "dubbo generic invoke" });
+//        System.out.println(genericInvokeResult);
     }
 
     private static void runWithRefer() {
@@ -64,8 +66,21 @@ public class Application {
         reference.setApplication(new ApplicationConfig("dubbo-demo-api-consumer"));
         reference.setRegistry(new RegistryConfig("zookeeper://127.0.0.1:2181"));
         reference.setInterface(DemoService.class);
-        DemoService service = reference.get();
-        String message = service.sayHello("dubbo");
-        System.out.println(message);
+        reference.setVersion("1.0.0");
+
+        for (int i = 0; i < 10; i++) {
+            long start = System.currentTimeMillis();
+            DemoService service = reference.get();
+            String message = service.sayHello("dubbo");
+//            RpcContext.getContext().getUrl().getParameter("application");
+            long end = System.currentTimeMillis();
+            System.out.println(message+":" + (end-start));
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 }

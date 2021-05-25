@@ -48,6 +48,8 @@ public class DefaultFuture extends CompletableFuture<Object> {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultFuture.class);
 
+    // 当发起一个请求时，会在CHANNELS中记录当前请求的id和channel的键值对
+    // 当有获得返回或者取消请求的时候，将该键值对从CHANNELS中删除
     private static final Map<Long, Channel> CHANNELS = new ConcurrentHashMap<>();
 
     private static final Map<Long, DefaultFuture> FUTURES = new ConcurrentHashMap<>();
@@ -79,7 +81,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
     private DefaultFuture(Channel channel, Request request, int timeout) {
         this.channel = channel;
         this.request = request;
-        this.id = request.getId();
+        this.id = request.getId();  // 全局唯一id
         this.timeout = timeout > 0 ? timeout : channel.getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
         // put into waiting map.
         FUTURES.put(id, this);
@@ -163,9 +165,10 @@ public class DefaultFuture extends CompletableFuture<Object> {
         received(channel, response, false);
     }
 
+    // 消费方接收到返回
     public static void received(Channel channel, Response response, boolean timeout) {
         try {
-            DefaultFuture future = FUTURES.remove(response.getId());
+            DefaultFuture future = FUTURES.remove(response.getId());    // request携带唯一的id, 删除
             if (future != null) {
                 Timeout t = future.timeoutCheckTask;
                 if (!timeout) {

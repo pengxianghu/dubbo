@@ -1,0 +1,131 @@
+
+
+
+提供方暴露服务
+ServiceConfig.doExportUrlsFor1Protocol -> DubboProtocol.export -> openServer
+
+消费方订阅服务
+RegistryConfig.refer
+
+
+
+
+
+开启netty
+
+NettyServer.doOpen
+
+
+
+Transporter层
+关键代码：
+
+
+@SPI("netty")
+public interface Transporter {
+
+    @Adaptive({Constants.SERVER_KEY, Constants.TRANSPORTER_KEY})
+    Server bind(URL url, ChannelHandler handler) throws RemotingException;
+
+    @Adaptive({Constants.CLIENT_KEY, Constants.TRANSPORTER_KEY})
+    Client connect(URL url, ChannelHandler handler) throws RemotingException;
+}
+
+
+
+序列化层
+由NettyServer的adapter.getDecoder()/adapter.getEncoder()进入DubboCountCodec->ExchangeCodec/DubboCodec，对request和response编解码和序列化
+
+DubboCodec继承ExchangeCodec，重写encodeRequestData等方法
+
+@SPI("hessian2")
+public interface Serialization {
+
+    byte getContentTypeId();
+
+    String getContentType();
+
+    @Adaptive
+    ObjectOutput serialize(URL url, OutputStream output) throws IOException;
+
+    @Adaptive
+    ObjectInput deserialize(URL url, InputStream input) throws IOException;
+
+}
+
+
+
+
+Exchange层
+关键代码：
+interface Exchanger
+class HeaderExchanger
+class HeaderExchangeClient
+class HeaderExchangeServer
+class HeaderExchangeChannel
+
+心跳有两部分实现
+1、HeaderExchangeClient -> HeartbeatTimerTask -> AbstractTimerTask.run()  // debug未进入
+2、netty4机制 NettyClient -> NettyClientHandler.userEventTriggered
+
+ExchangeClient
+1、发送请求
+ExchangeChannel负责将上层的data包装成Request，然后发送给Transport层；具体的逻辑在HeaderExchangeChannel中
+HeaderExchangeChannel.request
+2、接收返回
+DecodeHandler会先判断一下是否已经解码，如果解码就直接调用
+HeaderExchangeHandler.received
+    -> handleResponse
+        -> DefaultFuture.received(channel, response)
+
+ExchangeServer
+1、接收请求
+首先创建了一个Response，并且指定responseId为requestId
+HeaderExchangeHandler.received
+    -> handleRequest
+        -> handler.reply(channel, msg)
+
+
+Protocol层
+核心类DubboProtocol
+1、export暴露
+2、protocolBindingRefer订阅
+
+客户端调用：
+AbstractInvoker.invoke
+--> DubboInvoker.doInvoke
+
+
+
+
+Cluster层
+
+RegistryDirectory
+notify() 接收注册中心变动通知
+doList() 返回经过Router过滤的invokers列表
+
+FailoverClusterInvoker
+doInvoke() 经过Directory Router LoadBalance后选择一个invoker进行调用
+
+
+
+Registry层
+
+FailbackRegistry -> ZookeeperRegistry
+
+register
+unregister
+subscribe
+unsubscribe
+
+
+
+
+
+
+
+
+DUbbo优雅停机
+
+注册
+

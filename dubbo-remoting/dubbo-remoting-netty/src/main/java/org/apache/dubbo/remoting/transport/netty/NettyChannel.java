@@ -120,23 +120,28 @@ final class NettyChannel extends AbstractChannel {
     }
 
     @Override
+    // 回收资源
     public void close() {
         try {
+            // 将close属性设为true
             super.close();
         } catch (Exception e) {
             logger.warn(e.getMessage(), e);
         }
         try {
+            // 从全局NettyChannel缓存器中将当前的NettyChannel删掉
             removeChannelIfDisconnected(channel);
         } catch (Exception e) {
             logger.warn(e.getMessage(), e);
         }
         try {
+            // 清空当前的NettyChannel中的attributes属性
             attributes.clear();
         } catch (Exception e) {
             logger.warn(e.getMessage(), e);
         }
         try {
+            // 关闭netty的channel，执行netty的channel的优雅关闭
             if (logger.isInfoEnabled()) {
                 logger.info("Close netty channel " + channel);
             }

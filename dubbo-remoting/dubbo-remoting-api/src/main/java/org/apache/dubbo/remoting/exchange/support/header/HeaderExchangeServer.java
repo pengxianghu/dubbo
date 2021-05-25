@@ -54,7 +54,7 @@ public class HeaderExchangeServer implements ExchangeServer {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final RemotingServer server;
+    private final RemotingServer server;    // 具体的Server实现类，例如NettyServer
     private AtomicBoolean closed = new AtomicBoolean(false);
 
     private static final HashedWheelTimer IDLE_CHECK_TIMER = new HashedWheelTimer(new NamedThreadFactory("dubbo-server-idleCheck", true), 1,
@@ -65,6 +65,7 @@ public class HeaderExchangeServer implements ExchangeServer {
     public HeaderExchangeServer(RemotingServer server) {
         Assert.notNull(server, "server == null");
         this.server = server;
+        // 关闭无用连接
         startIdleCheckTask(getUrl());
     }
 
@@ -106,8 +107,10 @@ public class HeaderExchangeServer implements ExchangeServer {
             final long max = (long) timeout;
             final long start = System.currentTimeMillis();
             if (getUrl().getParameter(Constants.CHANNEL_SEND_READONLYEVENT_KEY, true)) {
+                // 发送read-only事件
                 sendChannelReadOnlyEvent();
             }
+            // 等待所有正在进行中的调用都执行完成，或者达到了超时时间
             while (HeaderExchangeServer.this.isRunning()
                     && System.currentTimeMillis() - start < max) {
                 try {
@@ -117,8 +120,8 @@ public class HeaderExchangeServer implements ExchangeServer {
                 }
             }
         }
-        doClose();
-        server.close(timeout);
+        doClose(); // 关闭部分定时任务
+        server.close(timeout); // 关闭真正的netty的通信通道
     }
 
     @Override
@@ -267,6 +270,7 @@ public class HeaderExchangeServer implements ExchangeServer {
             this.closeTimerTask = closeTimerTask;
 
             // init task and start timer.
+            // 仅仅启动了一个CloseTimerTask，用来检测超时时间关闭连接
             IDLE_CHECK_TIMER.newTimeout(closeTimerTask, idleTimeoutTick, TimeUnit.MILLISECONDS);
         }
     }

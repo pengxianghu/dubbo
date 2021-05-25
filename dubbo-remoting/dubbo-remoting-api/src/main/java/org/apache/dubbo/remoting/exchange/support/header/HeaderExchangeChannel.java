@@ -99,6 +99,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         } else {
             Request request = new Request();
             request.setVersion(Version.getProtocolVersion());
+            // 该请求不需要响应
             request.setTwoWay(false);
             request.setData(message);
             channel.send(request, sent);
@@ -132,11 +133,12 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         req.setData(request);
         DefaultFuture future = DefaultFuture.newFuture(channel, req, timeout, executor);
         try {
-            channel.send(req);
+            channel.send(req);  // 异步
         } catch (RemotingException e) {
             future.cancel();
             throw e;
         }
+        // 返回future
         return future;
     }
 

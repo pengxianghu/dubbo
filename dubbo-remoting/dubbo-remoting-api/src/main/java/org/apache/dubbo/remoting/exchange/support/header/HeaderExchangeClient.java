@@ -50,6 +50,7 @@ public class HeaderExchangeClient implements ExchangeClient {
 
     private static final HashedWheelTimer IDLE_CHECK_TIMER = new HashedWheelTimer(
             new NamedThreadFactory("dubbo-client-idleCheck", true), 1, TimeUnit.SECONDS, TICKS_PER_WHEEL);
+    // 心跳计时器
     private HeartbeatTimerTask heartBeatTimerTask;
     private ReconnectTimerTask reconnectTimerTask;
 
@@ -59,6 +60,7 @@ public class HeaderExchangeClient implements ExchangeClient {
         this.channel = new HeaderExchangeChannel(client);
 
         if (startTimer) {
+            // 消费者发起心跳检测，提供者只检测连接是否需要断开
             URL url = client.getUrl();
             startReconnectTask(url);
             startHeartBeatTask(url);

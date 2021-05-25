@@ -75,6 +75,7 @@ final class NettyCodecAdapter {
     @Sharable
     private class InternalEncoder extends OneToOneEncoder {
 
+        // 此类其实是对codec的包装，本身并没有做编码处理，重点看接口类Codec2
         @Override
         protected Object encode(ChannelHandlerContext ctx, Channel ch, Object msg) throws Exception {
             org.apache.dubbo.remoting.buffer.ChannelBuffer buffer =

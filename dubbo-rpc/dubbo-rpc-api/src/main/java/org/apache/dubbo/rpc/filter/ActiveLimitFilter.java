@@ -57,6 +57,7 @@ public class ActiveLimitFilter implements Filter, Filter.Listener {
             long start = System.currentTimeMillis();
             long remain = timeout;
             synchronized (rpcStatus) {
+                // 增
                 while (!RpcStatus.beginCount(url, methodName, max)) {
                     try {
                         rpcStatus.wait(remain);
@@ -87,6 +88,7 @@ public class ActiveLimitFilter implements Filter, Filter.Listener {
         URL url = invoker.getUrl();
         int max = invoker.getUrl().getMethodParameter(methodName, ACTIVES_KEY, 0);
 
+        // 减
         RpcStatus.endCount(url, methodName, getElapsed(invocation), true);
         notifyFinish(RpcStatus.getStatus(url, methodName), max);
     }

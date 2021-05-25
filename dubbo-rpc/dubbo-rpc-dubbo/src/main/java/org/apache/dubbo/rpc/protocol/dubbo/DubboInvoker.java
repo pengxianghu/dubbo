@@ -80,6 +80,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
     }
 
     @Override
+    // 客户端调用远程方法的时候会被调用
     protected Result doInvoke(final Invocation invocation) throws Throwable {
         RpcInvocation inv = (RpcInvocation) invocation;
         final String methodName = RpcUtils.getMethodName(invocation);
@@ -87,22 +88,25 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
         inv.setAttachment(VERSION_KEY, version);
 
         ExchangeClient currentClient;
+        // 如果实例化了多个ExchangeClient，会通过顺序的方式遍历使用ExchangeClient
         if (clients.length == 1) {
             currentClient = clients[0];
         } else {
             currentClient = clients[index.getAndIncrement() % clients.length];
         }
         try {
+            // 通过ExchangeClient将RpcInvocation发送给服务器端
             boolean isOneway = RpcUtils.isOneway(getUrl(), invocation);
             int timeout = calculateTimeout(invocation, methodName);
-            if (isOneway) {
+            if (isOneway) { // 异步无返回值
                 boolean isSent = getUrl().getMethodParameter(methodName, Constants.SENT_KEY, false);
                 currentClient.send(inv, isSent);
                 return AsyncRpcResult.newDefaultAsyncResult(invocation);
-            } else {
+            } else {    // 异步有返回值
                 ExecutorService executor = getCallbackExecutor(getUrl(), inv);
                 CompletableFuture<AppResponse> appResponseFuture =
                         currentClient.request(inv, timeout, executor).thenApply(obj -> (AppResponse) obj);
+                // currentClient.request --> HeaderExchangeChannel.request
                 // save for 2.6.x compatibility, for example, TraceFilter in Zipkin uses com.alibaba.xxx.FutureAdapter
                 FutureContext.getContext().setCompatibleFuture(appResponseFuture);
                 AsyncRpcResult result = new AsyncRpcResult(appResponseFuture, inv);
@@ -122,6 +126,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
             return false;
         }
         for (ExchangeClient client : clients) {
+            // 判断readonly
             if (client.isConnected() && !client.hasAttribute(Constants.CHANNEL_ATTRIBUTE_READONLY_KEY)) {
                 //cannot write == not Available ?
                 return true;
@@ -132,6 +137,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
 
     @Override
     public void destroy() {
+        // 销毁服务端，关闭所有连接到远程通信客户端
         // in order to avoid closing a client multiple times, a counter is used in case of connection per jvm, every
         // time when client.close() is called, counter counts down once, and when counter reaches zero, client will be
         // closed.

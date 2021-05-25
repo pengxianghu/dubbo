@@ -32,6 +32,7 @@ import java.util.List;
  * @see org.apache.dubbo.rpc.cluster.Cluster#join(Directory)
  */
 public interface Directory<T> extends Node {
+    // 目录服务作用就是获取指定接口的服务列表
 
     /**
      * get service type.

@@ -67,7 +67,7 @@ public class DubboCodec extends ExchangeCodec {
         // get request id.
         long id = Bytes.bytes2long(header, 4);
         if ((flag & FLAG_REQUEST) == 0) {
-            // decode response.
+            // decode response. 消费者端
             Response res = new Response(id);
             if ((flag & FLAG_EVENT) != 0) {
                 res.setEvent(true);
@@ -88,6 +88,7 @@ public class DubboCodec extends ExchangeCodec {
                                     (Invocation) getRequestData(id), proto);
                             result.decode();
                         } else {
+                            // --> DecodeableRpcResult
                             result = new DecodeableRpcResult(channel, res,
                                     new UnsafeByteArrayInputStream(readMessageData(is)),
                                     (Invocation) getRequestData(id), proto);
@@ -108,7 +109,7 @@ public class DubboCodec extends ExchangeCodec {
             }
             return res;
         } else {
-            // decode request.
+            // decode request. 提供者端
             Request req = new Request(id);
             req.setVersion(Version.getProtocolVersion());
             req.setTwoWay((flag & FLAG_TWOWAY) != 0);
@@ -168,23 +169,36 @@ public class DubboCodec extends ExchangeCodec {
     protected void encodeRequestData(Channel channel, ObjectOutput out, Object data, String version) throws IOException {
         RpcInvocation inv = (RpcInvocation) data;
 
+//        Dubbo version
+//        Service name
+//        Service version
+//        Method name
+//        Method parameter types
+//        Method arguments
+//        Attachments
+
+        // 输出版本
         out.writeUTF(version);
         // https://github.com/apache/dubbo/issues/6138
         String serviceName = inv.getAttachment(INTERFACE_KEY);
         if (serviceName == null) {
             serviceName = inv.getAttachment(PATH_KEY);
         }
+        // 输出path
         out.writeUTF(serviceName);
+        // 输出版本号
         out.writeUTF(inv.getAttachment(VERSION_KEY));
 
         out.writeUTF(inv.getMethodName());
         out.writeUTF(inv.getParameterTypesDesc());
         Object[] args = inv.getArguments();
+        // 输出参数
         if (args != null) {
             for (int i = 0; i < args.length; i++) {
                 out.writeObject(encodeInvocationArgument(channel, inv, i));
             }
         }
+        // 输出attachment
         out.writeAttachments(inv.getObjectAttachments());
     }
 
@@ -193,6 +207,7 @@ public class DubboCodec extends ExchangeCodec {
         Result result = (Result) data;
         // currently, the version value in Response records the version of Request
         boolean attach = Version.isSupportResponseAttachment(version);
+        // 获得异常
         Throwable th = result.getException();
         if (th == null) {
             Object ret = result.getValue();

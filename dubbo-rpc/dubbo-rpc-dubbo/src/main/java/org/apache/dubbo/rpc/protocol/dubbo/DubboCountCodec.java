@@ -31,6 +31,7 @@ import java.io.IOException;
 import static org.apache.dubbo.rpc.Constants.INPUT_KEY;
 import static org.apache.dubbo.rpc.Constants.OUTPUT_KEY;
 
+// 该类是对DubboCodec的功能增强，增加了消息长度的限制
 public final class DubboCountCodec implements Codec2 {
 
     private DubboCodec codec = new DubboCodec();
@@ -45,16 +46,20 @@ public final class DubboCountCodec implements Codec2 {
         int save = buffer.readerIndex();
         MultiMessage result = MultiMessage.create();
         do {
+            // --> ExchangeCodec
             Object obj = codec.decode(channel, buffer);
+            // 粘包拆包
             if (Codec2.DecodeResult.NEED_MORE_INPUT == obj) {
                 buffer.readerIndex(save);
                 break;
             } else {
                 result.addMessage(obj);
+                // 记录消息长度
                 logMessageLength(obj, buffer.readerIndex() - save);
                 save = buffer.readerIndex();
             }
         } while (true);
+        // 如果结果为空，则返回需要更多的输入
         if (result.isEmpty()) {
             return Codec2.DecodeResult.NEED_MORE_INPUT;
         }

@@ -1072,7 +1072,9 @@ public class DubboBootstrap extends GenericEventListener {
                     unexportServices();
                     unreferServices();
 
+                    // 销毁registry
                     destroyRegistries();
+                    // 销毁protocol
                     DubboShutdownHook.destroyProtocols();
                     destroyServiceDiscoveries();
 

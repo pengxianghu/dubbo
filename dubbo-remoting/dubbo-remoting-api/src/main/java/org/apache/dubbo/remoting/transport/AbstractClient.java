@@ -54,11 +54,17 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
     public AbstractClient(URL url, ChannelHandler handler) throws RemotingException {
         super(url, handler);
 
+//      send_reconnect表示在发送消息时发现连接已经断开是否发起重连，
+//      reconnect_warning_period表示多久报一次重连警告，
+//      shutdown_timeout表示连接服务器一直连接不上的超时时间
+
+        // send_reconnect表示在发送消息时发现连接已经断开是否发起重连
         needReconnect = url.getParameter(Constants.SEND_RECONNECT_KEY, false);
 
         initExecutor(url);
 
         try {
+            // 创建客户端的Bootstrap
             doOpen();
         } catch (Throwable t) {
             close();
@@ -67,7 +73,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
                             + " connect to the server " + getRemoteAddress() + ", cause: " + t.getMessage(), t);
         }
         try {
-            // connect.
+            // connect. 连接服务端
             connect();
             if (logger.isInfoEnabled()) {
                 logger.info("Start " + getClass().getSimpleName() + " " + NetUtils.getLocalAddress() + " connect to the server " + getRemoteAddress());
